@@ -81,25 +81,24 @@ public static class ProcessParallel
     }
 
 
-    public static IEnumerable<TOut> ForEach<TIn, TOut>(IEnumerable<TIn> items, Func<TIn, TOut> fn) where TIn : notnull
+    public static IList<TOut> ForEach<TIn, TOut>(IEnumerable<TIn> items, Func<TIn, TOut> fn) where TIn : notnull
     {
         if (items == null || fn == null)
         {
-            return Enumerable.Empty<TOut>();
+            return new List<TOut>();
         }
-
+        
         var methodInfo = fn.Method;
-        var typeName = methodInfo.DeclaringType.AssemblyQualifiedName;
         var methodName = methodInfo.Name;
+        if (!methodInfo.IsStatic)
+        {
+            throw new InvalidOperationException($"Unable to invoke a non-static method {methodName}");
+        }
+        var typeName = methodInfo.DeclaringType.AssemblyQualifiedName;
         var method = Type.GetType(typeName).GetMethod(methodName);
         if (method == null)
         {
             throw new MissingMethodException(typeName, methodName);
-        }
-
-        if (!method.IsStatic)
-        {
-            throw new InvalidOperationException($"Unable to invoke a non-static method {methodName}");
         }
 
         ConcurrentQueue<TOut> queue = new ConcurrentQueue<TOut>();
