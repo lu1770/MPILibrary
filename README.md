@@ -5,7 +5,7 @@
 
 ## 1. Create a executable program.
 ## 2. Add sub-processes code on top of Main method.
-```
+```csharp
 if (ProcessParallel.IsSubProcess())
 {
     ProcessParallel.Handle();
@@ -13,7 +13,7 @@ if (ProcessParallel.IsSubProcess())
 }
 ```
 ## 3. Define a static method.
-```
+```csharp
 class Runner
 {
     public static object Run(string id)
@@ -28,7 +28,7 @@ class Runner
 }
 ```
 ## 4. Invoke multi-process runners
-```
+```csharp
 // Generate Items
 var items = Enumerable.Range(1, 200).Select(i => Guid.NewGuid().ToString());
 

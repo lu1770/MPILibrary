@@ -16,6 +16,7 @@
     <PackageProjectUrl>https://github.com/lu1770/MPILibrary</PackageProjectUrl>
     <RepositoryUrl>https://github.com/lu1770/MPILibrary</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+	<Version>1.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
