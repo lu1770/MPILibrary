@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34511.84
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MPILibrary", "MPILibrary.csproj", "{A62AB07E-5C07-4B28-AA0A-318111C38FCA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A62AB07E-5C07-4B28-AA0A-318111C38FCA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A62AB07E-5C07-4B28-AA0A-318111C38FCA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A62AB07E-5C07-4B28-AA0A-318111C38FCA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A62AB07E-5C07-4B28-AA0A-318111C38FCA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {480E4042-A0D0-445E-BCF6-A74FECD053D9}
+	EndGlobalSection
+EndGlobal
