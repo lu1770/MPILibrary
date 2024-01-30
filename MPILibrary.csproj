@@ -13,6 +13,9 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <Copyright>$(Authors)</Copyright>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/lu1770/MPILibrary</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/lu1770/MPILibrary</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>
