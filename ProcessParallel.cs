@@ -49,7 +49,7 @@ public static class ProcessParallel
             var payload = JsonConvert.DeserializeObject<ProcessInvokePayload>(value);
             var type = Type.GetType(payload.Type);
             var methodInfo = type.GetMethod(payload.Method);
-            var result = methodInfo.Invoke(null, new[] { payload.Parameters });
+            var result = methodInfo.Invoke(null, new[] { JsonConvert.DeserializeObject(payload.Parameters, methodInfo.GetParameters().Select(p=>p.ParameterType).FirstOrDefault()) });
             WriteOutput(result);
         }
         catch (Exception e)
@@ -130,7 +130,7 @@ public static class ProcessParallel
         {
             Type = typeName,
             Method = methodName,
-            Parameters = item,
+            Parameters = JsonConvert.SerializeObject(item),
         });
         var executionFileName = GetExecutionFileName();
         CheckEntryPointThrow(executionFileName);
@@ -155,6 +155,12 @@ public static class ProcessParallel
 
         var jsonWrappedText = readToEnd.Split(SEP).Last();
         var jsonText = JsonConvert.DeserializeObject<string>(jsonWrappedText);
+        if (jsonText.Contains($"\"{nameof(ExceptionMessage.StackTrace)}\""))
+        {
+            var error = JsonConvert.DeserializeObject<ExceptionMessage>(jsonText);
+            Debug.WriteLine(new StringBuilder().Append("Error:").AppendLine(error.Message).Append(nameof(ExceptionMessage.StackTrace)).AppendLine(error.StackTrace).ToString());
+            throw new Exception(error.Message);
+        }
         var output = JsonConvert.DeserializeObject<TOut>(jsonText);
         return output;
     }
