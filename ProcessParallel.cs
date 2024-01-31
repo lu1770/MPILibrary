@@ -13,6 +13,7 @@ public static class ProcessParallel
     public static void Handle()
     {
         ProcessInvoke(ArgsToDictionary(Environment.GetCommandLineArgs()));
+        Environment.Exit(0);
     }
 
     public static Dictionary<string, string> ArgsToDictionary(string[] args)
@@ -80,6 +81,7 @@ public static class ProcessParallel
         set => ProcessPool = new(_maxProcessLimit = value);
     }
 
+    public static bool EnableDebug { get; set; }
 
     public static IList<TOut> ForEach<TIn, TOut>(IEnumerable<TIn> items, Func<TIn, TOut> fn) where TIn : notnull
     {
@@ -151,13 +153,18 @@ public static class ProcessParallel
         {
             throw new Exception($"Internal Error: Invalid output format [{readToEnd}]");
         }
-
+#if DEBUG
+        if (EnableDebug)
+        {
+            Debug.WriteLine(new StringBuilder().Append("Pid:").AppendLine(process.Id.ToString()).AppendLine(readToEnd));
+        }
+#endif
         var jsonWrappedText = readToEnd.Split(SEP).Last();
         var jsonText = JsonConvert.DeserializeObject<string>(jsonWrappedText);
         if (jsonText.Contains($"\"{nameof(ExceptionMessage.StackTrace)}\""))
         {
             var error = JsonConvert.DeserializeObject<ExceptionMessage>(jsonText);
-            Debug.WriteLine(new StringBuilder().Append("Error:").AppendLine(error.Message).Append(nameof(ExceptionMessage.StackTrace)).AppendLine(error.StackTrace).ToString());
+            Console.WriteLine(new StringBuilder().Append("Error:").AppendLine(error.Message).Append(nameof(ExceptionMessage.StackTrace)).AppendLine(error.StackTrace).ToString());
             throw new Exception(error.Message);
         }
         var output = JsonConvert.DeserializeObject<TOut>(jsonText);
