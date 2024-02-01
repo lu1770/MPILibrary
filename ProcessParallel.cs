@@ -123,7 +123,7 @@ public static class ProcessParallel
 
         ConcurrentQueue<TOut> queue = new ConcurrentQueue<TOut>();
         var count = items.Count();
-        var batchCount = (int)Math.Ceiling((decimal)(count / MaxProcessLimit));
+        var batchCount = count / MaxProcessLimit + 1;
         ConcurrentQueue<Task> tasks = new ConcurrentQueue<Task>();
         for (var i = 0; i < batchCount; i++)
         {
@@ -141,6 +141,7 @@ public static class ProcessParallel
                     queue.Enqueue(output);
                 }));
             });
+            Task.WaitAll(tasks.ToArray());
         }
         Task.WaitAll(tasks.ToArray());
         if (queue.Count != count)
