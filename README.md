@@ -3,6 +3,10 @@
 ## MIT License
 - [License](LICENSE.md)
 
+## Installation
+```shell
+dotnet add package MPILibrary
+```
 ## 1. Create a executable program.
 ## 2. Add sub-processes code on top of Main method.
 ```csharp
