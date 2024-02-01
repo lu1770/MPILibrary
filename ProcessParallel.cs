@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Reflection.Metadata;
@@ -72,8 +73,8 @@ public static class ProcessParallel
     private static readonly string SEP = string.Concat(Enumerable.Repeat('|', 30));
 
 
-    private static BlockingCollection<string> ProcessPool = new(Environment.ProcessorCount);
-    private static int _maxProcessLimit = Environment.ProcessorCount;
+    private static BlockingCollection<string> ProcessPool = new(Environment.ProcessorCount - 1);
+    private static int _maxProcessLimit = Environment.ProcessorCount - 1;
 
     public static int MaxProcessLimit
     {
@@ -106,14 +107,14 @@ public static class ProcessParallel
         ConcurrentQueue<TOut> queue = new ConcurrentQueue<TOut>();
         var count = items.Count();
         var batchCount = count / MaxProcessLimit + 1;
-        ParallelOptions parallelOptions = new ParallelOptions
-        {
-            MaxDegreeOfParallelism = -1
-        };
         for (var i = 0; i < batchCount; i++)
         {
             var batch = items.Skip(i * MaxProcessLimit).Take(MaxProcessLimit).ToList();
             Debug.WriteLine($"Batch {i + 1}/{batchCount} batch size is {batch.Count}");
+            ParallelOptions parallelOptions = new ParallelOptions
+            {
+                MaxDegreeOfParallelism = batch.Count
+            };
             Parallel.ForEach(batch, parallelOptions, item =>
             {
                 var output = CreateProcess<TIn, TOut>(typeName, methodName, item);
