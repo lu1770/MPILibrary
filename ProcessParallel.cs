@@ -106,11 +106,15 @@ public static class ProcessParallel
         ConcurrentQueue<TOut> queue = new ConcurrentQueue<TOut>();
         var count = items.Count();
         var batchCount = count / MaxProcessLimit + 1;
+        ParallelOptions parallelOptions = new ParallelOptions
+        {
+            MaxDegreeOfParallelism = -1
+        };
         for (var i = 0; i < batchCount; i++)
         {
             var batch = items.Skip(i * MaxProcessLimit).Take(MaxProcessLimit).ToList();
             Debug.WriteLine($"Batch {i + 1}/{batchCount} batch size is {batch.Count}");
-            Parallel.ForEach(batch, item =>
+            Parallel.ForEach(batch, parallelOptions, item =>
             {
                 var output = CreateProcess<TIn, TOut>(typeName, methodName, item);
                 queue.Enqueue(output);
