@@ -54,14 +54,31 @@ public static class ProcessParallel
             var result = methodInfo.Invoke(null, new[] { JsonConvert.DeserializeObject(payload.Parameters, methodInfo.GetParameters().Select(p=>p.ParameterType).FirstOrDefault()) });
             WriteOutput(result);
         }
+        catch(TargetInvocationException targetInvocationException)
+        {
+            WriteErrorOutput(targetInvocationException.InnerException);
+            return;
+        }
         catch (Exception e)
         {
-            WriteOutput(new ExceptionMessage
-            {
-                Message = e.Message,
-                StackTrace = e.StackTrace
-            });
+            WriteErrorOutput(e);
         }
+    }
+
+    private static void WriteErrorOutput(Exception e)
+    {
+        WriteOutput(new ExceptionMessage
+        {
+            ExceptionType = e.GetType().AssemblyQualifiedName,
+            Message = e.Message,
+            StackTrace = e.StackTrace,
+            InnerException = new ExceptionMessage
+            {
+                Message = e.InnerException?.Message,
+                StackTrace = e.InnerException?.StackTrace,
+                ExceptionType = e.InnerException?.GetType().AssemblyQualifiedName,
+            }
+        });
     }
 
     private static void WriteOutput(object target)
@@ -106,22 +123,26 @@ public static class ProcessParallel
 
         ConcurrentQueue<TOut> queue = new ConcurrentQueue<TOut>();
         var count = items.Count();
-        var batchCount = count / MaxProcessLimit + 1;
+        var batchCount = (int)Math.Ceiling((decimal)(count / MaxProcessLimit));
+        ConcurrentQueue<Task> tasks = new ConcurrentQueue<Task>();
         for (var i = 0; i < batchCount; i++)
         {
             var batch = items.Skip(i * MaxProcessLimit).Take(MaxProcessLimit).ToList();
+            if (batch.Count==0)
+            {
+                continue;
+            }
             Debug.WriteLine($"Batch {i + 1}/{batchCount} batch size is {batch.Count}");
-            ParallelOptions parallelOptions = new ParallelOptions
+            batch.ForEach(item =>
             {
-                MaxDegreeOfParallelism = batch.Count
-            };
-            Parallel.ForEach(batch, parallelOptions, item =>
-            {
-                var output = CreateProcess<TIn, TOut>(typeName, methodName, item);
-                queue.Enqueue(output);
+                tasks.Enqueue(Task.Run(() =>
+                {
+                    var output = CreateProcess<TIn, TOut>(typeName, methodName, item);
+                    queue.Enqueue(output);
+                }));
             });
         }
-
+        Task.WaitAll(tasks.ToArray());
         if (queue.Count != count)
         {
             throw new Exception($"Result mismatched {queue.Count}/{count}");
@@ -147,6 +168,12 @@ public static class ProcessParallel
             StandardOutputEncoding = Encoding.UTF8
         };
         var process = Process.Start(startInfo);
+#if DEBUG
+        if (EnableDebug)
+        {
+            Debug.WriteLine(new StringBuilder().Append("Start Pid:").AppendLine(process.Id.ToString()));
+        }
+#endif
         var readToEnd = process.StandardOutput.ReadToEnd();
         process.WaitForExit();
         if (string.IsNullOrEmpty(readToEnd))
@@ -166,14 +193,26 @@ public static class ProcessParallel
 #endif
         var jsonWrappedText = readToEnd.Split(SEP).Last();
         var jsonText = JsonConvert.DeserializeObject<string>(jsonWrappedText);
+        CheckAnyExceptionThenThrow(jsonText);
+        var output = JsonConvert.DeserializeObject<TOut>(jsonText);
+        return output;
+    }
+
+    private static void CheckAnyExceptionThenThrow(string? jsonText)
+    {
         if (jsonText.Contains($"\"{nameof(ExceptionMessage.StackTrace)}\""))
         {
             var error = JsonConvert.DeserializeObject<ExceptionMessage>(jsonText);
-            Console.WriteLine(new StringBuilder().Append("Error:").AppendLine(error.Message).Append(nameof(ExceptionMessage.StackTrace)).AppendLine(error.StackTrace).ToString());
-            throw new Exception(error.Message);
+            Console.WriteLine(new StringBuilder()
+                .Append("Error:")
+                .AppendLine(error.Message)
+                .Append(nameof(ExceptionMessage.StackTrace))
+                .AppendLine(error.StackTrace)
+                .AppendLine(error.InnerException?.Message)
+                .AppendLine(error.InnerException?.StackTrace)
+                .ToString());
+            throw new SubprocessHandleException(error);
         }
-        var output = JsonConvert.DeserializeObject<TOut>(jsonText);
-        return output;
     }
 
     private static string GetOriginalCommandLineArgs()
